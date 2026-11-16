@@ -1,18 +1,22 @@
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
+# ---- 运行时数据：含密码哈希与会话密钥，禁止入库 ----
+instance/
+storage/
+.aiproject/
 
-# Other files and folders
-.settings/
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
 
-# Executables
-*.swf
-*.air
-*.ipa
-*.apk
+# ---- 日志与临时文件 ----
+*.log
 
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+# ---- 系统 / 编辑器 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

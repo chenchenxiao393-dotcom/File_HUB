@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>文件管理 · FileHub</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manager.css') }}?v=2">
+</head>
+<body class="manager-page">
+
+<header class="topbar">
+  <a class="brand" href="/">
+    <span class="brand-mark">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    </span>
+    <span>FileHub</span>
+  </a>
+
+  <div class="topbar-actions">
+    <span class="user-chip" title="当前登录用户">{{ username }}</span>
+    <span class="user-chip" id="quota-info" title="已用空间 / 容量上限">{{ usage_text }}</span>
+    {% if is_admin %}<a class="btn btn-ghost btn-sm" href="{{ url_for('admin_users') }}">用户管理</a>{% endif %}
+    <button class="btn btn-ghost btn-sm" id="btn-password" type="button">修改密码</button>
+    <form method="post" action="{{ url_for('logout') }}" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="btn btn-ghost btn-sm" type="submit">退出</button>
+    </form>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <span>目录</span>
+      <button class="icon-btn" id="btn-new-folder-side" type="button" title="新建文件夹">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <div class="tree" id="tree" role="tree"></div>
+  </aside>
+
+  <main class="workspace">
+    <div class="toolbar">
+      <button class="icon-btn" id="btn-up" type="button" title="返回上级">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-refresh" type="button" title="刷新">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 5v6h-6"/></svg>
+      </button>
+
+      <span class="toolbar-sep"></span>
+
+      <button class="btn btn-primary btn-sm" id="btn-upload" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        上传
+      </button>
+      <button class="btn btn-sm" id="btn-new-folder" type="button">新建文件夹</button>
+      <button class="btn btn-sm" id="btn-download" type="button" disabled>下载</button>
+      <button class="btn btn-sm" id="btn-rename" type="button" disabled>重命名</button>
+      <button class="btn btn-sm btn-danger" id="btn-delete" type="button" disabled>删除</button>
+
+      <input class="search" id="search" type="search" placeholder="在当前目录中筛选" autocomplete="off">
+    </div>
+
+    <div class="breadcrumb" id="breadcrumb"></div>
+
+    <div class="list-wrap" id="list-wrap">
+      <div class="list-head">
+        <span class="col-name" data-key="name">名称</span>
+        <span class="col-mtime" data-key="mtime">修改日期</span>
+        <span class="col-type" data-key="type">类型</span>
+        <span class="col-size" data-key="size">大小</span>
+      </div>
+      <div class="list-body" id="list"></div>
+      <div class="drop-hint" id="drop-hint">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <p>释放鼠标即可上传到当前目录</p>
+      </div>
+    </div>
+
+    <div class="statusbar">
+      <span id="status">就绪</span>
+      <span id="selection-info"></span>
+    </div>
+  </main>
+</div>
+
+<input type="file" id="file-input" multiple hidden>
+<div class="progress" id="progress" hidden>
+  <div class="progress-bar"><i id="progress-fill"></i></div>
+  <span id="progress-text">上传中…</span>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<div class="modal-mask" id="modal" hidden>
+  <div class="modal">
+    <h3 id="modal-title">提示</h3>
+    <p class="modal-desc" id="modal-desc"></p>
+    <input class="modal-input" id="modal-input" type="text" hidden>
+    <input class="modal-input" id="modal-input-2" type="password" hidden>
+    <div class="modal-actions">
+      <button class="btn btn-sm" id="modal-cancel" type="button">取消</button>
+      <button class="btn btn-primary btn-sm" id="modal-ok" type="button">确定</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/manager.js') }}"></script>
+</body>
+</html>

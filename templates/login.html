@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>登录 · FileHub</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-page">
+
+<a class="brand brand-top" href="/">
+  <span class="brand-mark">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+  </span>
+  <span>FileHub</span>
+</a>
+
+<main class="auth-card">
+  <h1>登录文件工作台</h1>
+  <p class="auth-tip">仅授权账号可访问文件目录</p>
+
+  {% if error %}
+  <div class="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('login', next=request.args.get('next', '')) }}" autocomplete="off">
+    <label class="field">
+      <span>用户名</span>
+      <input type="text" name="username" required autofocus maxlength="64">
+    </label>
+    <label class="field">
+      <span>密码</span>
+      <input type="password" name="password" required maxlength="128">
+    </label>
+    <button class="btn btn-primary btn-block" type="submit">登录</button>
+  </form>
+
+  <a class="auth-back" href="{{ url_for('register') }}">没有账号？申请注册</a>
+  <a class="auth-back" href="/">返回首页</a>
+</main>
+
+</body>
+</html>
